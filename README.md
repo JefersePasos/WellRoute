@@ -1,35 +1,47 @@
 # 🧭 WellRoute
 
-**WellRoute** es un periódico digital que combina bienestar y viajes en un solo lugar: un feed de noticias, recetas, rutinas, destinos y multimedia, organizado como las secciones de un diario tradicional, pero alimentado en tiempo real por 10 APIs externas distintas.
+**WellRoute** es una guía de viaje interactiva. La página de inicio muestra un collage de destinos (imagen + nombre); al hacer clic en uno, se despliega una ficha completa del lugar con video informativo, lugares icónicos, actividades, clima, compra de entradas y videos cortos de viajeros reales.
 
 > Proyecto desarrollado para el curso **SC-701 Programación Avanzada en Web**.
 
 ---
 
-## 📰 Concepto
+## 🗺️ Concepto
 
-Así como un periódico tiene secciones de Deportes, Opinión o Cultura alimentadas por distintos corresponsales, WellRoute organiza su contenido en secciones temáticas, cada una conectada a una API diferente.
+La idea central es responder a la pregunta: **"Quiero ir a París, ¿y ahora qué?"**
+
+1. El usuario entra y ve un **collage de destinos** (solo imagen + nombre), inspirado en páginas tipo TravelMore/TripAdvisor.
+2. Al hacer clic en un destino, se abre una **ficha detallada** con:
+   - Video informativo del lugar
+   - Descripción general (historia, cultura, qué lo hace especial)
+   - Lugares icónicos (con foto + descripción corta)
+   - Actividades que se pueden hacer
+   - Clima, mejor época para viajar, idioma
+   - Compra de entradas a atracciones (ej. Torre Eiffel, Coliseo)
+   - Videos cortos (estilo TikTok) de gente visitando el lugar
+3. El usuario puede **guardar destinos como favoritos** y **buscar** directamente ("¿A dónde quieres ir?").
 
 ## 🗂️ Secciones y APIs
 
 | Sección | Contenido | API |
 |---|---|---|
-| Portada / Titulares | Noticias de bienestar y turismo | NewsAPI |
-| Editorial | Frases motivacionales del día | Quotable |
-| Vida Activa | Rutinas de ejercicio | ExerciseDB |
-| Buena Mesa | Recetas saludables | TheMealDB |
-| Multimedia | Podcasts de desarrollo personal y viajes | Spotify API |
-| El Clima del Viajero | Clima de destinos | OpenWeatherMap |
-| Destinos | Datos de países y ciudades | REST Countries |
-| Fotorreportaje | Fotografías de bienestar y destinos | Unsplash |
-| Videoteca | Videos de viajeros y rutinas | YouTube Data API |
-| La Librería | Libros de viaje y desarrollo personal | Open Library |
+| Portada / Collage de destinos | Imágenes de destinos | Unsplash |
+| Video informativo | Video del destino | YouTube Data API |
+| Videos de viajeros | Clips cortos estilo TikTok de gente visitando el lugar | TikTok API |
+| Información general | Datos del país (idioma, moneda, bandera, región) | REST Countries |
+| Información de ciudad | Datos de la ciudad (población, coordenadas, zona horaria) | GeoDB Cities |
+| El Clima del Viajero | Clima actual y pronóstico del destino | OpenWeatherMap |
+| Lugares icónicos | Puntos de interés cercanos (monumentos, plazas, museos) | Google Places API |
+| Actividades | Tours, experiencias y cosas que hacer | GetYourGuide / Viator API |
+| Compra de entradas | Boletos a atracciones (ej. Torre Eiffel, Coliseo) | Viator API / Tiqets API |
+| Presupuesto de viaje | Conversión de moneda para estimar gastos | ExchangeRate API |
 
 ## ✨ Funcionalidades principales
 
-- **Favoritos**: guardar contenido de cualquier sección en la base de datos del usuario.
-- **Intercambio entre grupos**: descarga y visualización de contenido publicado por otros grupos, mediante un formato JSON compartido (ver sección [Formato de intercambio](#-formato-de-intercambio-entre-grupos)).
-- **Elemento sorpresa**: _(completar con lo que el grupo decida implementar, ej. lector de texto a voz, ticker de última hora, gamificación, etc.)_
+- **Favoritos**: guardar destinos en la base de datos del usuario para consultarlos después.
+- **Búsqueda**: el usuario escribe un destino ("Quiero ir a París") y la app le muestra toda la ficha correspondiente.
+- **Intercambio entre grupos**: descarga y visualización de fichas de destino publicadas por otros grupos, mediante un formato JSON compartido (ver sección [Formato de intercambio](#-formato-de-intercambio-entre-grupos)).
+- **Elemento sorpresa — Dashboard de estadísticas**: panel visual donde el usuario puede ver qué tipo de contenido guarda más (por sección, por API de origen, por fecha, etc.), implementado con **Chart.js**.
 
 ## 🏗️ Arquitectura
 
@@ -49,14 +61,16 @@ WellRoute
 
 ## 🔄 Formato de intercambio entre grupos
 
-Estructura JSON acordada para publicar y descargar contenido entre grupos:
+Estructura JSON acordada para publicar y descargar fichas de destino entre grupos:
 
 ```json
 {
-  "titulo": "string",
-  "seccion": "string",
-  "resumen": "string",
+  "nombreDestino": "string",
+  "pais": "string",
+  "categoria": "string (ej: Cultura, Playa, Aventura, Gastronomía)",
+  "descripcion": "string",
   "imagenUrl": "string",
+  "videoUrl": "string",
   "fuenteApi": "string",
   "fechaPublicacion": "datetime",
   "grupoOrigen": "string"
@@ -71,6 +85,7 @@ Estructura JSON acordada para publicar y descargar contenido entre grupos:
 - Razor / Model Binding
 - Dependency Injection / IoC
 - Consumo de APIs REST externas
+- Chart.js (dashboard de estadísticas)
 
 ## 🚀 Cómo correr el proyecto localmente
 
@@ -87,7 +102,7 @@ Estructura JSON acordada para publicar y descargar contenido entre grupos:
 
 ## 🔑 Variables de entorno / API Keys
 
-Cada integrante deberá obtener sus propias API keys para los servicios utilizados (NewsAPI, Spotify, OpenWeatherMap, Unsplash, YouTube, etc.) y colocarlas en un archivo de configuración local que **no se debe subir al repositorio** (ver `.gitignore`).
+Cada integrante deberá obtener sus propias API keys para los servicios utilizados (YouTube Data API, Google Places, OpenWeatherMap, Unsplash, TikTok API, Viator/GetYourGuide, etc.) y colocarlas en un archivo de configuración local que **no se debe subir al repositorio** (ver `.gitignore`).
 
 ## 👥 Integrantes del grupo
 
