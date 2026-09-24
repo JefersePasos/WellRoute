@@ -91,10 +91,11 @@ Cada integrante deberá obtener sus propias API keys para los servicios utilizad
 
 ## 👥 Integrantes del grupo
 
-- Nombre Apellido
-- Nombre Apellido
-- Nombre Apellido
-- Nombre Apellido
+- Deyvin Pasos
+- Kenny Alonso
+- Nancy Gutierrez
+- Abigail Suarez
+- Sebastian Flores
 
 ## 📄 Licencia
 
