@@ -1,0 +1,7 @@
+<Solution>
+  <Project Path="WellRoute.API/WellRoute.API.csproj" Id="325dafc4-2569-4089-b869-93f5d02b9c6c" />
+  <Project Path="WellRoute.Arquitecture/WellRoute.Arquitecture.csproj" Id="4f51cc6b-cda3-4433-be63-d356a44c36f7" />
+  <Project Path="WellRoute.DataAccess/WellRoute.DataAccess.csproj" Id="7922a241-6da8-45ad-8e75-6db55e986b13" />
+  <Project Path="WellRoute.Models/WellRoute.Models.csproj" Id="6c652ff5-37ad-499d-ba83-2a260debeee2" />
+  <Project Path="WellRoute.Web/WellRoute.Web.csproj" />
+</Solution>
