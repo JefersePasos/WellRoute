@@ -38,5 +38,20 @@ namespace WellRoute.API.Controllers
 		{
 			return NoContent();
 		}
+
+		[HttpGet("me")]
+		[Authorize]
+		public IActionResult Me()
+		{
+			return Ok(new
+			{
+				usuarioId = User.ObtenerUsuarioId(),
+				email = User.ObtenerEmail(),
+				nombre = User.ObtenerNombre(),
+				roles = User.ObtenerRoles(),
+				permisos = User.ObtenerPermisos(),
+				debeCambiarContrasena = User.DebeCambiarContrasena()
+			});
+		}
 	}
 }
