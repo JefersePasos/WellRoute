@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using WellRoute.Arquitecture.Auditoria;
 using WellRoute.Arquitecture.Auth;
 using WellRoute.Models.Dtos;
 
@@ -10,10 +11,12 @@ namespace WellRoute.API.Controllers
 	public class AuthController : ControllerBase
 	{
 		private readonly IAuthService _authService;
+		private readonly IAuditoriaService _auditoria;
 
-		public AuthController(IAuthService authService)
+		public AuthController(IAuthService authService, IAuditoriaService auditoria)
 		{
 			_authService = authService;
+			_auditoria = auditoria;
 		}
 
 		[HttpPost("login")]
@@ -31,11 +34,14 @@ namespace WellRoute.API.Controllers
 			};
 		}
 
-		// El token no se guarda en el servidor, así que cerrar sesión es que el Web lo descarte
+		// El token no se guarda en el servidor, así que cerrar sesión es que el Web lo descarte.
+		// Aquí solo queda el registro del logout en Historial_Accesos (el usuario sale del token).
 		[HttpPost("logout")]
 		[Authorize]
-		public IActionResult Logout()
+		public async Task<IActionResult> Logout()
 		{
+			await _auditoria.RegistrarAccesoAsync(TipoAcceso.Logout);
+
 			return NoContent();
 		}
 
