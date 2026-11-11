@@ -48,6 +48,15 @@ public sealed class AuthApiClient(HttpClient http)
         using var respuesta = await http.SendAsync(solicitud, ct);
         return respuesta.StatusCode;
     }
+
+    // Avisa a la API para que registre el logout en Historial_Accesos.
+    public async Task CerrarSesionAsync(string token, CancellationToken ct)
+    {
+        using var solicitud = new HttpRequestMessage(HttpMethod.Post, "api/auth/logout");
+        solicitud.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+        using var respuesta = await http.SendAsync(solicitud, ct);
+    }
 }
 
 public sealed class PerfilApi

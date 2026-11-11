@@ -15,6 +15,7 @@ namespace WellRoute.Web.Controllers;
 public sealed class CuentaController(AuthApiClient api) : Controller
 {
     private const string TokenPendiente = "CambioContrasena.Token";
+    private const string TokenApi = "access_token";
 
     [HttpGet]
     [AllowAnonymous]
@@ -91,8 +92,16 @@ public sealed class CuentaController(AuthApiClient api) : Controller
             var esquema = CookieAuthenticationDefaults.AuthenticationScheme;
             var identidad = new ClaimsIdentity(claims, esquema);
 
-            await HttpContext.SignInAsync(esquema, new ClaimsPrincipal(identidad),
-                new AuthenticationProperties { ExpiresUtc = expiraUtc, IsPersistent = false });
+            var propiedades = new AuthenticationProperties { ExpiresUtc = expiraUtc, IsPersistent = false };
+
+            // Se guarda el token de la API dentro de la cookie (cifrada) para poder avisar
+            // el logout a la API al cerrar sesión.
+            propiedades.StoreTokens(new[]
+            {
+                new AuthenticationToken { Name = TokenApi, Value = datos.Token }
+            });
+
+            await HttpContext.SignInAsync(esquema, new ClaimsPrincipal(identidad), propiedades);
 
             return RedirectToAction(nameof(Perfil));
         }
@@ -191,6 +200,21 @@ public sealed class CuentaController(AuthApiClient api) : Controller
     {
         await HttpContext.Session.LoadAsync(ct);
         HttpContext.Session.Remove(TokenPendiente);
+
+        // Se avisa a la API para que registre el logout. Si la API no responde o el token
+        // ya venció, igual se cierra la sesión de la Web.
+        var token = await HttpContext.GetTokenAsync(TokenApi);
+        if (!string.IsNullOrEmpty(token))
+        {
+            try
+            {
+                await api.CerrarSesionAsync(token, ct);
+            }
+            catch (Exception ex) when (ex is HttpRequestException or OperationCanceledException)
+            {
+            }
+        }
+
         await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
         return RedirectToAction(nameof(Login));
     }
