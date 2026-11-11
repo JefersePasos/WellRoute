@@ -38,10 +38,13 @@ namespace WellRoute.Arquitecture.Auth
 				new(ClaimNombres.DebeCambiarContrasena, usuario.DebeCambiarContrasena ? "true" : "false")
 			};
 
-			claims.AddRange(roles.Select(r => new Claim(ClaimNombres.Rol, r)));
-			claims.AddRange(permisos.Select(p => new Claim(ClaimNombres.Permiso, p)));
+            if (!usuario.DebeCambiarContrasena)
+            {
+                claims.AddRange(roles.Select(r => new Claim(ClaimNombres.Rol, r)));
+                claims.AddRange(permisos.Select(p => new Claim(ClaimNombres.Permiso, p)));
+            }
 
-			var descriptor = new SecurityTokenDescriptor
+            var descriptor = new SecurityTokenDescriptor
 			{
 				Subject = new ClaimsIdentity(claims),
 				Issuer = _opciones.Issuer,

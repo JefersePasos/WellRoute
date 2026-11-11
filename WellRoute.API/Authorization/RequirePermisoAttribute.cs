@@ -24,10 +24,10 @@ namespace WellRoute.API.Authorization
 				return;
 			}
 
-			if (!usuario.TienePermiso(_permiso))
-			{
-				context.Result = new StatusCodeResult(StatusCodes.Status403Forbidden);
-			}
-		}
+            if (!usuario.HasClaim(ClaimNombres.DebeCambiarContrasena, "false") || !usuario.TienePermiso(_permiso))
+            {
+                context.Result = new StatusCodeResult(StatusCodes.Status403Forbidden);
+            }
+        }
 	}
 }

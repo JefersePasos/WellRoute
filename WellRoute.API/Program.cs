@@ -5,6 +5,7 @@ using Microsoft.IdentityModel.Tokens;
 using WellRoute.Arquitecture.Auth;
 using WellRoute.Arquitecture.Security;
 using WellRoute.DataAccess.Context;
+using Microsoft.AspNetCore.Authorization;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -46,6 +47,18 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 			NameClaimType = "name",
 			RoleClaimType = "role"
 		};
+	});
+
+builder.Services.AddAuthorization(opciones =>
+	{
+		opciones.DefaultPolicy = new AuthorizationPolicyBuilder()
+			.RequireAuthenticatedUser()
+			.RequireClaim(ClaimNombres.DebeCambiarContrasena, "false")
+			.Build();
+
+		opciones.AddPolicy("CambioContrasenaTemporal", politica => politica
+			.RequireAuthenticatedUser()
+			.RequireClaim(ClaimNombres.DebeCambiarContrasena, "true"));
 	});
 
 // Add services to the container.
