@@ -27,6 +27,24 @@
                             <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
                         </li>
                     </ul>
+                    @if (User.Identity?.IsAuthenticated == true)
+                    {
+                        <div class="d-flex flex-wrap align-items-center gap-2">
+                            <a asp-controller="Cuenta" asp-action="Perfil" class="btn btn-outline-primary">
+                                Mi cuenta
+                            </a>
+                            <form asp-controller="Cuenta" asp-action="CerrarSesion"
+                                  method="post" asp-antiforgery="true">
+                                <button type="submit" class="btn btn-outline-secondary">Cerrar sesión</button>
+                            </form>
+                        </div>
+                    }
+                    else
+                    {
+                        <a asp-controller="Cuenta" asp-action="Login" class="btn btn-primary">
+                            Iniciar sesión
+                        </a>
+                    }
                 </div>
             </div>
         </nav>

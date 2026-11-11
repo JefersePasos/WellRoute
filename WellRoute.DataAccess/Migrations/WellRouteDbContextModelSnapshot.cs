@@ -22,6 +22,101 @@ namespace WellRoute.DataAccess.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("WellRoute.Models.Entities.Bitacora", b =>
+                {
+                    b.Property<int>("BitacoraID")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("BitacoraID"));
+
+                    b.Property<string>("Accion")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("Descripcion")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("DireccionIP")
+                        .HasMaxLength(45)
+                        .HasColumnType("nvarchar(45)");
+
+                    b.Property<string>("Entidad")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("EntidadID")
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<DateTime>("Fecha")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()");
+
+                    b.Property<string>("Modulo")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<int?>("UsuarioID")
+                        .HasColumnType("int");
+
+                    b.HasKey("BitacoraID");
+
+                    b.HasIndex("Fecha");
+
+                    b.HasIndex("UsuarioID");
+
+                    b.HasIndex("Modulo", "Accion");
+
+                    b.ToTable("Bitacora", (string)null);
+                });
+
+            modelBuilder.Entity("WellRoute.Models.Entities.Historial_Acceso", b =>
+                {
+                    b.Property<int>("HistorialAccesoID")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("HistorialAccesoID"));
+
+                    b.Property<string>("DireccionIP")
+                        .HasMaxLength(45)
+                        .HasColumnType("nvarchar(45)");
+
+                    b.Property<string>("EmailIntentado")
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("Evento")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<DateTime>("Fecha")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()");
+
+                    b.Property<string>("UserAgent")
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)");
+
+                    b.Property<int?>("UsuarioID")
+                        .HasColumnType("int");
+
+                    b.HasKey("HistorialAccesoID");
+
+                    b.HasIndex("Fecha");
+
+                    b.HasIndex("UsuarioID");
+
+                    b.ToTable("Historial_Accesos", (string)null);
+                });
+
             modelBuilder.Entity("WellRoute.Models.Entities.Permiso", b =>
                 {
                     b.Property<int>("PermisoID")
@@ -399,6 +494,26 @@ namespace WellRoute.DataAccess.Migrations
                     b.HasIndex("RolID");
 
                     b.ToTable("UsuarioRoles");
+                });
+
+            modelBuilder.Entity("WellRoute.Models.Entities.Bitacora", b =>
+                {
+                    b.HasOne("WellRoute.Models.Entities.Usuario", "Usuario")
+                        .WithMany()
+                        .HasForeignKey("UsuarioID")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("Usuario");
+                });
+
+            modelBuilder.Entity("WellRoute.Models.Entities.Historial_Acceso", b =>
+                {
+                    b.HasOne("WellRoute.Models.Entities.Usuario", "Usuario")
+                        .WithMany()
+                        .HasForeignKey("UsuarioID")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("Usuario");
                 });
 
             modelBuilder.Entity("WellRoute.Models.Entities.Rol_Permiso", b =>
