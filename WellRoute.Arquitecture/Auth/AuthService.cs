@@ -10,7 +10,11 @@ namespace WellRoute.Arquitecture.Auth
 	public interface IAuthService
 	{
 		Task<LoginResult> LoginAsync(LoginRequest request);
-	}
+        Task<EstadoCambioContrasena> CambiarContrasenaTemporalAsync(
+			int usuarioId,
+			CambiarContrasenaTemporalRequest solicitud,
+			CancellationToken ct);
+    }
 
 	public class AuthService : IAuthService
 	{
@@ -105,8 +109,81 @@ namespace WellRoute.Arquitecture.Auth
 				DebeCambiarContrasena = usuario.DebeCambiarContrasena
 			};
 		}
+        public async Task<EstadoCambioContrasena> CambiarContrasenaTemporalAsync(
+			int usuarioId,
+			CambiarContrasenaTemporalRequest solicitud,
+			CancellationToken ct)
+        {
+            var usuario = await _context.Usuarios
+                .FirstOrDefaultAsync(u => u.UsuarioID == usuarioId, ct);
 
-		private async Task<LoginResult> RegistrarIntentoFallidoAsync(Usuario usuario, DateTime ahora)
+            if (usuario is null || !usuario.Activo)
+                return EstadoCambioContrasena.CuentaNoDisponible;
+
+            if (!usuario.DebeCambiarContrasena)
+                return EstadoCambioContrasena.CambioNoPendiente;
+
+            var ahora = DateTime.UtcNow;
+
+            if (usuario.FechaBloqueoHasta is DateTime bloqueadaHasta &&
+                bloqueadaHasta > ahora)
+            {
+                return EstadoCambioContrasena.CuentaBloqueada;
+            }
+
+            // Si el bloqueo venció, el contador de intentos vuelve a empezar.
+            if (usuario.FechaBloqueoHasta.HasValue)
+            {
+                usuario.FechaBloqueoHasta = null;
+                usuario.IntentosFallidos = 0;
+            }
+
+            if (!_hasher.Verificar(
+                solicitud.ContrasenaActual,
+                usuario.PasswordHash,
+                usuario.PasswordSalt))
+            {
+                var fallo = await RegistrarIntentoFallidoAsync(usuario, ahora);
+
+                return fallo.Resultado == ResultadoLogin.CuentaBloqueada
+                    ? EstadoCambioContrasena.CuentaBloqueada
+                    : EstadoCambioContrasena.DatosInvalidos;
+            }
+
+            if (string.Equals(
+                solicitud.ContrasenaActual,
+                solicitud.ContrasenaNueva,
+                StringComparison.Ordinal))
+            {
+                return EstadoCambioContrasena.DatosInvalidos;
+            }
+
+            var hashAnterior = usuario.PasswordHash;
+            var saltAnterior = usuario.PasswordSalt;
+            var (hashNuevo, saltNuevo) = _hasher.Hashear(solicitud.ContrasenaNueva);
+
+            // Guarda el cambio solo si la cuenta sigue en el estado verificado.
+            var filas = await _context.Usuarios
+                .Where(u => u.UsuarioID == usuarioId &&
+                    u.Activo &&
+                    u.DebeCambiarContrasena &&
+                    u.PasswordHash == hashAnterior &&
+                    u.PasswordSalt == saltAnterior &&
+                    (u.FechaBloqueoHasta == null || u.FechaBloqueoHasta <= ahora))
+                .ExecuteUpdateAsync(cambios => cambios
+                    .SetProperty(u => u.PasswordHash, hashNuevo)
+                    .SetProperty(u => u.PasswordSalt, saltNuevo)
+                    .SetProperty(u => u.DebeCambiarContrasena, false)
+                    .SetProperty(u => u.IntentosFallidos, 0)
+                    .SetProperty(u => u.FechaBloqueoHasta, (DateTime?)null)
+                    .SetProperty(u => u.FechaActualizacion, (DateTime?)ahora), ct);
+
+            return filas == 1
+                ? EstadoCambioContrasena.Exitoso
+                : EstadoCambioContrasena.CambioNoPendiente;
+        }
+
+        private async Task<LoginResult> RegistrarIntentoFallidoAsync(Usuario usuario, DateTime ahora)
 		{
 			usuario.IntentosFallidos++;
 

@@ -53,5 +53,29 @@ namespace WellRoute.API.Controllers
 				debeCambiarContrasena = User.DebeCambiarContrasena()
 			});
 		}
-	}
+        [HttpPost("cambiar-contrasena-temporal")]
+        [Authorize(Policy = "CambioContrasenaTemporal")]
+        public async Task<IActionResult> CambiarContrasenaTemporal(
+			[FromBody] CambiarContrasenaTemporalRequest solicitud,
+			CancellationToken ct)
+        {
+            var usuarioId = User.ObtenerUsuarioId();
+
+            if (usuarioId is not int id || id <= 0)
+                return Forbid();
+
+            var estado = await _authService.CambiarContrasenaTemporalAsync(
+                id, solicitud, ct);
+
+            return estado switch
+            {
+                EstadoCambioContrasena.Exitoso => NoContent(),
+                EstadoCambioContrasena.DatosInvalidos => BadRequest(),
+                EstadoCambioContrasena.CuentaBloqueada =>
+                    StatusCode(StatusCodes.Status423Locked),
+                EstadoCambioContrasena.CambioNoPendiente => Conflict(),
+                _ => Forbid()
+            };
+        }
+    }
 }
