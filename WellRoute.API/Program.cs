@@ -2,6 +2,8 @@ using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
+using WellRoute.API;
+using WellRoute.Arquitecture.Auditoria;
 using WellRoute.Arquitecture.Auth;
 using WellRoute.Arquitecture.Security;
 using WellRoute.DataAccess.Context;
@@ -22,6 +24,11 @@ builder.Services.Configure<JwtOptions>(builder.Configuration.GetSection(JwtOptio
 builder.Services.AddSingleton<IPasswordHasher, PasswordHasher>();
 builder.Services.AddSingleton<ITokenService, TokenService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
+
+// Historial de accesos y bitácora (issue #7)
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<IContextoSolicitud, ContextoSolicitud>();
+builder.Services.AddScoped<IAuditoriaService, AuditoriaService>();
 
 var jwt = builder.Configuration.GetSection(JwtOptions.Seccion).Get<JwtOptions>() ?? new JwtOptions();
 
