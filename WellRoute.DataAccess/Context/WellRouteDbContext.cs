@@ -17,6 +17,8 @@ namespace WellRoute.DataAccess.Context
         public DbSet<Permiso> Permisos { get; set; }
         public DbSet<Usuario_Rol> UsuarioRoles { get; set; }
         public DbSet<Rol_Permiso> RolPermisos { get; set; }
+        public DbSet<Historial_Acceso> HistorialAccesos { get; set; }
+        public DbSet<Bitacora> Bitacoras { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -142,6 +144,80 @@ namespace WellRoute.DataAccess.Context
 
                 entity.Property(e => e.FechaAsignacion)
                     .HasDefaultValueSql("GETUTCDATE()");
+            });
+
+            // ==================== CONFIGURACIÓN HISTORIAL_ACCESOS ====================
+            modelBuilder.Entity<Historial_Acceso>(entity =>
+            {
+                entity.ToTable("Historial_Accesos");
+
+                entity.HasKey(e => e.HistorialAccesoID);
+
+                // Se guarda el nombre del evento (LoginExitoso, Logout...) para que sea legible en SQL
+                entity.Property(e => e.Evento)
+                    .IsRequired()
+                    .HasMaxLength(30);
+
+                entity.Property(e => e.EmailIntentado)
+                    .HasMaxLength(100);
+
+                entity.Property(e => e.DireccionIP)
+                    .HasMaxLength(45);
+
+                entity.Property(e => e.UserAgent)
+                    .HasMaxLength(300);
+
+                entity.Property(e => e.Fecha)
+                    .HasDefaultValueSql("GETUTCDATE()");
+
+                // Restrict: el historial no se borra si se borra el usuario
+                entity.HasOne(e => e.Usuario)
+                    .WithMany()
+                    .HasForeignKey(e => e.UsuarioID)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasIndex(e => e.UsuarioID);
+                entity.HasIndex(e => e.Fecha);
+            });
+
+            // ==================== CONFIGURACIÓN BITACORA ====================
+            modelBuilder.Entity<Bitacora>(entity =>
+            {
+                entity.ToTable("Bitacora");
+
+                entity.HasKey(e => e.BitacoraID);
+
+                entity.Property(e => e.Modulo)
+                    .IsRequired()
+                    .HasMaxLength(50);
+
+                entity.Property(e => e.Accion)
+                    .IsRequired()
+                    .HasMaxLength(50);
+
+                entity.Property(e => e.Entidad)
+                    .HasMaxLength(50);
+
+                entity.Property(e => e.EntidadID)
+                    .HasMaxLength(50);
+
+                entity.Property(e => e.Descripcion)
+                    .HasMaxLength(500);
+
+                entity.Property(e => e.DireccionIP)
+                    .HasMaxLength(45);
+
+                entity.Property(e => e.Fecha)
+                    .HasDefaultValueSql("GETUTCDATE()");
+
+                entity.HasOne(e => e.Usuario)
+                    .WithMany()
+                    .HasForeignKey(e => e.UsuarioID)
+                    .OnDelete(DeleteBehavior.Restrict);
+
+                entity.HasIndex(e => e.UsuarioID);
+                entity.HasIndex(e => e.Fecha);
+                entity.HasIndex(e => new { e.Modulo, e.Accion });
             });
 
             // ==================== SEED DATA: PERMISOS ====================
