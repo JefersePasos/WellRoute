@@ -5,7 +5,9 @@ using Microsoft.IdentityModel.Tokens;
 using WellRoute.API;
 using WellRoute.Arquitecture.Auditoria;
 using WellRoute.Arquitecture.Auth;
+using WellRoute.Arquitecture.Roles;
 using WellRoute.Arquitecture.Security;
+using WellRoute.Arquitecture.Usuarios;
 using WellRoute.DataAccess.Context;
 using Microsoft.AspNetCore.Authorization;
 
@@ -24,6 +26,10 @@ builder.Services.Configure<JwtOptions>(builder.Configuration.GetSection(JwtOptio
 builder.Services.AddSingleton<IPasswordHasher, PasswordHasher>();
 builder.Services.AddSingleton<ITokenService, TokenService>();
 builder.Services.AddScoped<IAuthService, AuthService>();
+
+// Gestión de usuarios y roles (issue #6)
+builder.Services.AddScoped<IUsuarioService, UsuarioService>();
+builder.Services.AddScoped<IRolService, RolService>();
 
 // Historial de accesos y bitácora (issue #7)
 builder.Services.AddHttpContextAccessor();

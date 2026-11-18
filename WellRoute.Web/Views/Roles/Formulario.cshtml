@@ -1,0 +1,62 @@
+@model WellRoute.Web.Models.RolFormViewModel
+
+@{
+    var esEdicion = Model.RolID.HasValue;
+    ViewData["Title"] = Model.EsAdministrador ? "Rol Administrador" : (esEdicion ? "Editar rol" : "Nuevo rol");
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-7">
+        <h1 class="mb-3">@ViewData["Title"]</h1>
+
+        @if (Model.EsAdministrador)
+        {
+            <div class="alert alert-info" role="alert">
+                El rol Administrador tiene todos los permisos y no se puede modificar.
+            </div>
+        }
+
+        <form asp-action="@(esEdicion ? "Editar" : "Crear")" asp-route-id="@Model.RolID" method="post">
+            <div asp-validation-summary="ModelOnly" class="text-danger" role="alert"></div>
+
+            <fieldset disabled="@Model.EsAdministrador">
+                <div class="mb-3">
+                    <label asp-for="Nombre" class="form-label"></label>
+                    <input asp-for="Nombre" class="form-control" autocomplete="off" />
+                    <span asp-validation-for="Nombre" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label asp-for="Descripcion" class="form-label"></label>
+                    <input asp-for="Descripcion" class="form-control" autocomplete="off" />
+                    <span asp-validation-for="Descripcion" class="text-danger"></span>
+                </div>
+
+                <div class="mb-3">
+                    <label class="form-label">Permisos</label>
+                    @foreach (var permiso in Model.PermisosDisponibles)
+                    {
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" name="PermisoIds"
+                                   value="@permiso.PermisoID" id="permiso-@permiso.PermisoID"
+                                   checked="@Model.PermisoIds.Contains(permiso.PermisoID)" />
+                            <label class="form-check-label" for="permiso-@permiso.PermisoID">
+                                @permiso.Nombre <span class="text-muted">(@permiso.Codigo)</span>
+                            </label>
+                        </div>
+                    }
+                </div>
+            </fieldset>
+
+            @if (!Model.EsAdministrador)
+            {
+                <button type="submit" class="btn btn-primary">Guardar</button>
+            }
+            <a asp-action="Index" class="btn btn-outline-secondary">@(Model.EsAdministrador ? "Volver" : "Cancelar")</a>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

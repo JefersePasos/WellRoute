@@ -1,0 +1,74 @@
+@model List<WellRoute.Models.Dtos.RolListaDto>
+
+@{
+    ViewData["Title"] = "Roles";
+}
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="mb-0">Roles</h1>
+    <a asp-action="Crear" class="btn btn-primary">Nuevo rol</a>
+</div>
+
+@if (ViewBag.Error is string errorCarga)
+{
+    <div class="alert alert-danger" role="alert">@errorCarga</div>
+}
+
+<div class="table-responsive">
+    <table class="table table-striped align-middle">
+        <thead>
+            <tr>
+                <th>Nombre</th>
+                <th>Descripción</th>
+                <th>Permisos</th>
+                <th>Usuarios</th>
+                <th>Estado</th>
+                <th class="text-end">Acciones</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var rol in Model)
+            {
+                var esAdministrador = rol.Nombre == WellRoute.Arquitecture.Roles.RolesSistema.Administrador;
+                <tr>
+                    <td>@rol.Nombre</td>
+                    <td>@rol.Descripcion</td>
+                    <td>@rol.CantidadPermisos</td>
+                    <td>@rol.CantidadUsuarios</td>
+                    <td>
+                        @if (rol.Activo)
+                        {
+                            <span class="badge bg-success">Activo</span>
+                        }
+                        else
+                        {
+                            <span class="badge bg-secondary">Inactivo</span>
+                        }
+                    </td>
+                    <td class="text-end">
+                        <a asp-action="Editar" asp-route-id="@rol.RolID"
+                           class="btn btn-sm btn-outline-primary">@(esAdministrador ? "Ver" : "Editar")</a>
+
+                        @if (!esAdministrador)
+                        {
+                            <form asp-action="CambiarEstado" asp-route-id="@rol.RolID"
+                                  method="post" class="d-inline">
+                                <input type="hidden" name="activo" value="@((!rol.Activo).ToString().ToLowerInvariant())" />
+                                <button type="submit"
+                                        class="btn btn-sm @(rol.Activo ? "btn-outline-danger" : "btn-outline-success")">
+                                    @(rol.Activo ? "Desactivar" : "Activar")
+                                </button>
+                            </form>
+                        }
+                    </td>
+                </tr>
+            }
+            @if (Model.Count == 0)
+            {
+                <tr>
+                    <td colspan="6" class="text-center text-muted">No hay roles para mostrar.</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

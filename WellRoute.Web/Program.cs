@@ -19,6 +19,12 @@ builder.Services.AddHttpClient<AuthApiClient>(cliente =>
     cliente.Timeout = TimeSpan.FromSeconds(15);
 });
 
+builder.Services.AddHttpClient<AdminApiClient>(cliente =>
+{
+    cliente.BaseAddress = baseApi;
+    cliente.Timeout = TimeSpan.FromSeconds(15);
+});
+
 builder.Services.AddDistributedMemoryCache();
 builder.Services.AddSession(opciones =>
 {
@@ -35,6 +41,7 @@ builder.Services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationSc
     .AddCookie(opciones =>
     {
         opciones.LoginPath = "/Cuenta/Login";
+        opciones.AccessDeniedPath = "/Home/Index";
         opciones.Cookie.Name = ".WellRoute.Auth";
         opciones.Cookie.HttpOnly = true;
         opciones.Cookie.SecurePolicy = CookieSecurePolicy.Always;

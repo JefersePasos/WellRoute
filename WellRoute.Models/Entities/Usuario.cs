@@ -7,17 +7,17 @@ namespace WellRoute.Models.Entities
 	{
 		public int UsuarioID { get; set; }
 
-		public string Nombre { get; set; }
+		public string Nombre { get; set; } = string.Empty;
 
-		public string Email { get; set; }
+		public string Email { get; set; } = string.Empty;
 
-		public string PasswordHash { get; set; }
+		public string PasswordHash { get; set; } = string.Empty;
 
-		public string PasswordSalt { get; set; }
+		public string PasswordSalt { get; set; } = string.Empty;
 
-		public string Telefono { get; set; }
+		public string Telefono { get; set; } = string.Empty;
 
-		public string FotoPerfil { get; set; }
+		public string FotoPerfil { get; set; } = string.Empty;
 
 		public bool Activo { get; set; }
 

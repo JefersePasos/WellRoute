@@ -1,0 +1,30 @@
+@model WellRoute.Web.Models.ContrasenaTemporalViewModel
+
+@{
+    ViewData["Title"] = Model.Titulo;
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-7">
+        <h1 class="mb-3">@Model.Titulo</h1>
+
+        <div class="alert alert-warning" role="alert">
+            Copia esta contraseña ahora y entrégala al usuario. Por seguridad <strong>no se vuelve a mostrar</strong>.
+            Si se pierde, se puede restablecer desde la lista de usuarios.
+        </div>
+
+        <dl class="row">
+            <dt class="col-sm-4">Correo</dt>
+            <dd class="col-sm-8">@Model.Email</dd>
+
+            <dt class="col-sm-4">Contraseña temporal</dt>
+            <dd class="col-sm-8"><code class="fs-5 user-select-all">@Model.Contrasena</code></dd>
+        </dl>
+
+        <p class="text-muted">
+            El usuario deberá cambiarla en su primer inicio de sesión.
+        </p>
+
+        <a asp-action="Index" class="btn btn-primary">Volver a usuarios</a>
+    </div>
+</div>

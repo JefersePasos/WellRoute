@@ -11,8 +11,8 @@ namespace WellRoute.Models.Entities
         public DateTime FechaAsignacion { get; set; }
 
         // Relaciones: Foreign Keys
-        public Rol Rol { get; set; }
+        public Rol Rol { get; set; } = null!;
 
-        public Permiso Permiso { get; set; }
+        public Permiso Permiso { get; set; } = null!;
     }
 }
