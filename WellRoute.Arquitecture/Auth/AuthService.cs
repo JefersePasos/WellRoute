@@ -1,5 +1,6 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
+using WellRoute.Arquitecture.Auditoria;
 using WellRoute.Arquitecture.Security;
 using WellRoute.DataAccess.Context;
 using WellRoute.Models.Dtos;
@@ -25,17 +26,20 @@ namespace WellRoute.Arquitecture.Auth
 		private readonly IPasswordHasher _hasher;
 		private readonly ITokenService _tokenService;
 		private readonly AuthOptions _opciones;
+		private readonly IAuditoriaService _auditoria;
 
 		public AuthService(
 			WellRouteDbContext context,
 			IPasswordHasher hasher,
 			ITokenService tokenService,
-			IOptions<AuthOptions> opciones)
+			IOptions<AuthOptions> opciones,
+			IAuditoriaService auditoria)
 		{
 			_context = context;
 			_hasher = hasher;
 			_tokenService = tokenService;
 			_opciones = opciones.Value;
+			_auditoria = auditoria;
 		}
 
 		public async Task<LoginResult> LoginAsync(LoginRequest request)
@@ -53,11 +57,13 @@ namespace WellRoute.Arquitecture.Auth
 			if (usuario == null)
 			{
 				_hasher.Verificar(request.Password, HashRelleno.Hash, HashRelleno.Salt);
+				await _auditoria.RegistrarAccesoAsync(TipoAcceso.LoginFallido, null, email);
 				return CredencialesInvalidas();
 			}
 
 			if (usuario.FechaBloqueoHasta.HasValue && usuario.FechaBloqueoHasta.Value > ahora)
 			{
+				await _auditoria.RegistrarAccesoAsync(TipoAcceso.CuentaBloqueada, usuario.UsuarioID, email);
 				return CuentaBloqueada(usuario.FechaBloqueoHasta.Value, ahora);
 			}
 
@@ -69,11 +75,19 @@ namespace WellRoute.Arquitecture.Auth
 
 			if (!_hasher.Verificar(request.Password, usuario.PasswordHash, usuario.PasswordSalt))
 			{
-				return await RegistrarIntentoFallidoAsync(usuario, ahora);
+				var fallo = await RegistrarIntentoFallidoAsync(usuario, ahora);
+
+				await _auditoria.RegistrarAccesoAsync(
+					fallo.Resultado == ResultadoLogin.CuentaBloqueada ? TipoAcceso.CuentaBloqueada : TipoAcceso.LoginFallido,
+					usuario.UsuarioID,
+					email);
+
+				return fallo;
 			}
 
 			if (!usuario.Activo)
 			{
+				await _auditoria.RegistrarAccesoAsync(TipoAcceso.CuentaInactiva, usuario.UsuarioID, email);
 				return new LoginResult
 				{
 					Resultado = ResultadoLogin.CuentaInactiva,
@@ -99,6 +113,8 @@ namespace WellRoute.Arquitecture.Auth
 			usuario.FechaBloqueoHasta = null;
 			usuario.FechaUltimoLogin = ahora;
 			await _context.SaveChangesAsync();
+
+			await _auditoria.RegistrarAccesoAsync(TipoAcceso.LoginExitoso, usuario.UsuarioID);
 
 			return new LoginResult
 			{
@@ -178,9 +194,17 @@ namespace WellRoute.Arquitecture.Auth
                     .SetProperty(u => u.FechaBloqueoHasta, (DateTime?)null)
                     .SetProperty(u => u.FechaActualizacion, (DateTime?)ahora), ct);
 
-            return filas == 1
-                ? EstadoCambioContrasena.Exitoso
-                : EstadoCambioContrasena.CambioNoPendiente;
+            if (filas != 1)
+                return EstadoCambioContrasena.CambioNoPendiente;
+
+            await _auditoria.RegistrarAsync(
+                ModulosBitacora.Autenticacion,
+                AccionesBitacora.CambiarContrasena,
+                "Usuario",
+                usuarioId.ToString(),
+                "Cambio de contraseña temporal");
+
+            return EstadoCambioContrasena.Exitoso;
         }
 
         private async Task<LoginResult> RegistrarIntentoFallidoAsync(Usuario usuario, DateTime ahora)
