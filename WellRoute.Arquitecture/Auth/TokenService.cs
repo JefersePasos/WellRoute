@@ -32,16 +32,19 @@ namespace WellRoute.Arquitecture.Auth
 
 			var claims = new List<Claim>
 			{
-				new("sub", usuario.UsuarioID.ToString()),
-				new("email", usuario.Email),
-				new("name", usuario.Nombre),
-				new("debe_cambiar_contrasena", usuario.DebeCambiarContrasena ? "true" : "false")
+				new(ClaimNombres.UsuarioId, usuario.UsuarioID.ToString()),
+				new(ClaimNombres.Email, usuario.Email),
+				new(ClaimNombres.Nombre, usuario.Nombre),
+				new(ClaimNombres.DebeCambiarContrasena, usuario.DebeCambiarContrasena ? "true" : "false")
 			};
 
-			claims.AddRange(roles.Select(r => new Claim("role", r)));
-			claims.AddRange(permisos.Select(p => new Claim("permiso", p)));
+            if (!usuario.DebeCambiarContrasena)
+            {
+                claims.AddRange(roles.Select(r => new Claim(ClaimNombres.Rol, r)));
+                claims.AddRange(permisos.Select(p => new Claim(ClaimNombres.Permiso, p)));
+            }
 
-			var descriptor = new SecurityTokenDescriptor
+            var descriptor = new SecurityTokenDescriptor
 			{
 				Subject = new ClaimsIdentity(claims),
 				Issuer = _opciones.Issuer,
