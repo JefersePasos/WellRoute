@@ -38,6 +38,8 @@ La idea central es responder a la pregunta: **"Quiero ir a París, ¿y ahora qu�
 
 ## ✨ Funcionalidades principales
 
+- **Autenticación y roles**: inicio de sesión con bloqueo por intentos fallidos, contraseña temporal obligatoria de cambiar en el primer ingreso, y gestión de usuarios, roles y permisos desde un panel de administración.
+- **Historial de accesos y bitácora**: registro de inicios y cierres de sesión, y de las acciones administrativas.
 - **Favoritos**: guardar destinos en la base de datos del usuario para consultarlos después.
 - **Búsqueda**: el usuario escribe un destino ("Quiero ir a París") y la app le muestra toda la ficha correspondiente.
 - **Intercambio entre grupos**: descarga y visualización de fichas de destino publicadas por otros grupos, mediante un formato JSON compartido (ver sección [Formato de intercambio](#-formato-de-intercambio-entre-grupos)).
@@ -50,13 +52,15 @@ El proyecto sigue una arquitectura en capas (n-layer), simulando un entorno de m
 ```
 WellRoute
 ├── WellRoute.Web           → Frontend (ASP.NET Core MVC)
-├── WellRoute.Api           → API que consume el Web
-├── WellRoute.Models        → Class Library con las clases compartidas
-└── WellRoute.DataAccess    → Entity Framework + patrón Repositorio
+├── WellRoute.API           → API REST que consume el Web
+├── WellRoute.Arquitecture  → Lógica de negocio (autenticación, usuarios, roles, auditoría)
+├── WellRoute.Models        → Entidades y DTOs compartidos
+└── WellRoute.DataAccess    → Entity Framework Core (DbContext y migraciones)
 ```
 
-- **WellRoute.Web** consume **WellRoute.Api** mediante una capa de servicios (Services).
-- **WellRoute.Api** usa **WellRoute.DataAccess** para leer/escribir en la base de datos vía Entity Framework (Database First).
+- **WellRoute.Web** consume **WellRoute.API** mediante una capa de servicios (Services) y guarda el token de la API dentro de su cookie de sesión.
+- **WellRoute.API** expone los endpoints protegidos con JWT y por permisos, y usa **WellRoute.Arquitecture** para la lógica.
+- **WellRoute.DataAccess** accede a SQL Server con Entity Framework Core (Code First, con migraciones).
 - **WellRoute.Models** es referenciado por todos los demás proyectos para mantener bajo acoplamiento.
 
 ## 🔄 Formato de intercambio entre grupos
@@ -79,9 +83,10 @@ Estructura JSON acordada para publicar y descargar fichas de destino entre grupo
 
 ## 🛠️ Tecnologías
 
-- ASP.NET Core (.NET 8) — MVC y Web API
-- Entity Framework Core (Database First / Scaffolding)
+- ASP.NET Core (.NET 10) — MVC y Web API
+- Entity Framework Core 10 (Code First con migraciones)
 - SQL Server
+- Autenticación con JWT (API) y cookies (Web)
 - Razor / Model Binding
 - Dependency Injection / IoC
 - Consumo de APIs REST externas
@@ -89,20 +94,32 @@ Estructura JSON acordada para publicar y descargar fichas de destino entre grupo
 
 ## 🚀 Cómo correr el proyecto localmente
 
-1. Cloná el repositorio:
+**Requisitos:** SDK de .NET 10, SQL Server (LocalDB o Express) y la herramienta de migraciones de EF:
+
+```bash
+dotnet tool install --global dotnet-ef
+```
+
+1. Clona el repositorio:
    ```bash
-   git clone https://github.com/<usuario-u-organizacion>/WellRoute.git
+   git clone https://github.com/JefersePasos/WellRoute.git
    ```
-2. Abrí `WellRoute.sln` en Visual Studio.
-3. Restaurá los paquetes NuGet (Entity Framework Core, SQL Server, Design, Tools).
-4. Configurá la cadena de conexión a tu base de datos en `appsettings.json` (proyecto `WellRoute.Api`).
-5. Corré el scaffolding de Entity Framework si es la primera vez que configurás el proyecto (ver instrucciones en `/docs`).
-6. En Visual Studio, configurá **Multiple Startup Projects**: `WellRoute.Web` y `WellRoute.Api`.
-7. Ejecutá el proyecto (F5).
+2. Abre `WellRoute.slnx` en Visual Studio.
+3. Configura los secretos de la API (no se suben al repositorio). La cadena de conexión por defecto de `appsettings.json` usa LocalDB; si usas otra instancia de SQL Server, sobrescríbela con tu propio valor:
+   ```bash
+   dotnet user-secrets set "Jwt:Key" "una-clave-larga-de-minimo-32-caracteres" --project WellRoute.API
+   dotnet user-secrets set "ConnectionStrings:WellRouteConnection" "Server=TU_SERVIDOR;Database=WellRoute;Trusted_Connection=true;Encrypt=true;TrustServerCertificate=true;" --project WellRoute.API
+   ```
+4. Crea la base de datos aplicando las migraciones:
+   ```bash
+   dotnet ef database update --project WellRoute.DataAccess --startup-project WellRoute.API
+   ```
+5. En Visual Studio, configura **Multiple Startup Projects**: `WellRoute.API` y `WellRoute.Web`, con el perfil **https** en ambos.
+6. Ejecuta el proyecto (F5). En Development, la API crea un administrador de prueba si no hay usuarios (`admin@wellroute.local`). Su contraseña temporal está en `WellRoute.API/DevSeeder.cs` y el sistema pide cambiarla en el primer inicio de sesión.
 
 ## 🔑 Variables de entorno / API Keys
 
-Cada integrante deberá obtener sus propias API keys para los servicios utilizados (YouTube Data API, Google Places, OpenWeatherMap, Unsplash, TikTok API, Viator/GetYourGuide, etc.) y colocarlas en un archivo de configuración local que **no se debe subir al repositorio** (ver `.gitignore`).
+Cada integrante deberá obtener sus propias API keys para los servicios utilizados (YouTube Data API, Google Places, OpenWeatherMap, Unsplash, TikTok API, Viator/GetYourGuide, etc.) y colocarlas en un archivo de configuración local o en `user-secrets`, que **no se debe subir al repositorio** (ver `.gitignore`).
 
 ## 👥 Integrantes del grupo
 
