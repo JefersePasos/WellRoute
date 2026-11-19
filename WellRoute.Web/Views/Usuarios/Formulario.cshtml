@@ -1,0 +1,71 @@
+@model WellRoute.Web.Models.UsuarioFormViewModel
+
+@{
+    var esEdicion = Model.UsuarioID.HasValue;
+    ViewData["Title"] = esEdicion ? "Editar usuario" : "Nuevo usuario";
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-7">
+        <h1 class="mb-3">@ViewData["Title"]</h1>
+
+        @if (!esEdicion)
+        {
+            <p class="text-muted">
+                Al guardar se genera una contraseña temporal. El usuario deberá cambiarla en su primer inicio de sesión.
+            </p>
+        }
+
+        <form asp-action="@(esEdicion ? "Editar" : "Crear")" asp-route-id="@Model.UsuarioID" method="post">
+            <div asp-validation-summary="ModelOnly" class="text-danger" role="alert"></div>
+
+            <div class="mb-3">
+                <label asp-for="Nombre" class="form-label"></label>
+                <input asp-for="Nombre" class="form-control" autocomplete="off" />
+                <span asp-validation-for="Nombre" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Email" class="form-label"></label>
+                <input asp-for="Email" type="email" class="form-control" autocomplete="off" />
+                <span asp-validation-for="Email" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Telefono" class="form-label"></label>
+                <input asp-for="Telefono" class="form-control" autocomplete="off" />
+                <span asp-validation-for="Telefono" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Roles</label>
+                @foreach (var rol in Model.RolesDisponibles)
+                {
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" name="RolIds"
+                               value="@rol.RolID" id="rol-@rol.RolID"
+                               checked="@Model.RolIds.Contains(rol.RolID)" />
+                        <label class="form-check-label" for="rol-@rol.RolID">
+                            @rol.Nombre
+                            @if (!string.IsNullOrWhiteSpace(rol.Descripcion))
+                            {
+                                <span class="text-muted">- @rol.Descripcion</span>
+                            }
+                        </label>
+                    </div>
+                }
+                @if (Model.RolesDisponibles.Count == 0)
+                {
+                    <div class="text-muted">No hay roles activos disponibles.</div>
+                }
+            </div>
+
+            <button type="submit" class="btn btn-primary">Guardar</button>
+            <a asp-action="Index" class="btn btn-outline-secondary">Cancelar</a>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
