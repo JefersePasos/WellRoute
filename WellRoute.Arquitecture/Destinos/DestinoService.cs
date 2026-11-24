@@ -1,3 +1,4 @@
+using System.Globalization;
 using Microsoft.EntityFrameworkCore;
 using WellRoute.Arquitecture.Auditoria;
 using WellRoute.DataAccess.Context;
@@ -8,8 +9,8 @@ namespace WellRoute.Arquitecture.Destinos;
 
 public interface IDestinoService
 {
-    // Portada y ficha pública: solo destinos activos.
-    Task<List<DestinoListaDto>> ListarPublicosAsync(CancellationToken ct);
+    // Portada y ficha pública: solo destinos activos. Se puede buscar por texto y filtrar por categoría.
+    Task<List<DestinoListaDto>> ListarPublicosAsync(string? buscar, string? categoria, CancellationToken ct);
 
     Task<ResultadoOperacion<DestinoDetalleDto>> ObtenerPublicoAsync(int id, CancellationToken ct);
 
@@ -27,11 +28,63 @@ public interface IDestinoService
 
 public class DestinoService(WellRouteDbContext db, IAuditoriaService auditoria) : IDestinoService
 {
-    public Task<List<DestinoListaDto>> ListarPublicosAsync(CancellationToken ct) =>
-        ListarAsync(soloActivos: true, ct);
+    // Palabras que se ignoran al buscar, para que "Quiero ir a París" encuentre "París".
+    private static readonly HashSet<string> PalabrasVacias = new(StringComparer.OrdinalIgnoreCase)
+    {
+        "quiero", "ir", "a", "al", "en", "de", "del", "la", "el", "los", "las", "un", "una",
+        "viajar", "conocer", "visitar", "donde", "dónde", "para", "me", "gustaria", "gustaría", "voy", "por"
+    };
 
-    public Task<List<DestinoListaDto>> ListarGestionAsync(CancellationToken ct) =>
-        ListarAsync(soloActivos: false, ct);
+    public async Task<List<DestinoListaDto>> ListarPublicosAsync(
+        string? buscar, string? categoria, CancellationToken ct)
+    {
+        var consulta = db.Destinos.AsNoTracking().Where(d => d.Activo);
+
+        var categoriaOficial = CategoriasDestino.Todas.FirstOrDefault(c =>
+            string.Equals(c, categoria?.Trim(), StringComparison.OrdinalIgnoreCase));
+
+        if (categoriaOficial is not null)
+            consulta = consulta.Where(d => d.Categoria == categoriaOficial);
+
+        var lista = await consulta
+            .OrderBy(d => d.Nombre)
+            .Select(d => new DestinoListaDto
+            {
+                DestinoID = d.DestinoID,
+                Nombre = d.Nombre,
+                Pais = d.Pais,
+                Categoria = d.Categoria,
+                ImagenUrl = d.ImagenUrl,
+                Activo = d.Activo
+            })
+            .ToListAsync(ct);
+
+        var terminos = ExtraerTerminos(buscar);
+        if (terminos.Count == 0)
+            return lista;
+
+        // Se filtra en memoria para ignorar mayúsculas y tildes ("paris" encuentra "París").
+        return lista
+            .Where(d => terminos.All(t => Contiene(d.Nombre, t) || Contiene(d.Pais, t) || Contiene(d.Categoria, t)))
+            .ToList();
+    }
+
+    public async Task<List<DestinoListaDto>> ListarGestionAsync(CancellationToken ct)
+    {
+        return await db.Destinos
+            .AsNoTracking()
+            .OrderBy(d => d.Nombre)
+            .Select(d => new DestinoListaDto
+            {
+                DestinoID = d.DestinoID,
+                Nombre = d.Nombre,
+                Pais = d.Pais,
+                Categoria = d.Categoria,
+                ImagenUrl = d.ImagenUrl,
+                Activo = d.Activo
+            })
+            .ToListAsync(ct);
+    }
 
     public Task<ResultadoOperacion<DestinoDetalleDto>> ObtenerPublicoAsync(int id, CancellationToken ct) =>
         ObtenerAsync(id, soloActivos: true, ct);
@@ -151,24 +204,6 @@ public class DestinoService(WellRouteDbContext db, IAuditoriaService auditoria) 
         return ResultadoOperacion<bool>.Ok(true);
     }
 
-    private async Task<List<DestinoListaDto>> ListarAsync(bool soloActivos, CancellationToken ct)
-    {
-        return await db.Destinos
-            .AsNoTracking()
-            .Where(d => !soloActivos || d.Activo)
-            .OrderBy(d => d.Nombre)
-            .Select(d => new DestinoListaDto
-            {
-                DestinoID = d.DestinoID,
-                Nombre = d.Nombre,
-                Pais = d.Pais,
-                Categoria = d.Categoria,
-                ImagenUrl = d.ImagenUrl,
-                Activo = d.Activo
-            })
-            .ToListAsync(ct);
-    }
-
     private async Task<ResultadoOperacion<DestinoDetalleDto>> ObtenerAsync(
         int id, bool soloActivos, CancellationToken ct)
     {
@@ -219,4 +254,23 @@ public class DestinoService(WellRouteDbContext db, IAuditoriaService auditoria) 
 
     private static string? LimpiarOpcional(string? valor) =>
         string.IsNullOrWhiteSpace(valor) ? null : valor.Trim();
+
+    // Separa lo que escribió el usuario en palabras útiles (máximo 5, de hasta 50 caracteres).
+    private static List<string> ExtraerTerminos(string? buscar)
+    {
+        if (string.IsNullOrWhiteSpace(buscar))
+            return new List<string>();
+
+        return buscar
+            .Split(new[] { ' ', ',', '.', ';', '¿', '?', '¡', '!' }, StringSplitOptions.RemoveEmptyEntries)
+            .Where(t => !PalabrasVacias.Contains(t))
+            .Select(t => t.Length > 50 ? t[..50] : t)
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .Take(5)
+            .ToList();
+    }
+
+    private static bool Contiene(string texto, string termino) =>
+        CultureInfo.InvariantCulture.CompareInfo.IndexOf(
+            texto, termino, CompareOptions.IgnoreCase | CompareOptions.IgnoreNonSpace) >= 0;
 }

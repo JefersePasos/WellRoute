@@ -1,7 +1,8 @@
-﻿@model List<WellRoute.Models.Dtos.DestinoListaDto>
+﻿@model WellRoute.Web.Models.PortadaViewModel
 
 @{
     ViewData["Title"] = "Destinos";
+    var retorno = $"{Context.Request.Path}{Context.Request.QueryString}";
 }
 
 <div class="text-center my-4">
@@ -9,28 +10,54 @@
     <p class="text-muted">Elige un destino y descubre todo lo que puedes hacer allí.</p>
 </div>
 
-@if (ViewBag.Error is string errorCarga)
+<form method="get" asp-controller="Home" asp-action="Index" class="row g-2 justify-content-center mb-4">
+    <div class="col-12 col-md-5">
+        <input type="search" name="buscar" value="@Model.Buscar" maxlength="100"
+               class="form-control" placeholder="Ej.: Quiero ir a París" aria-label="Buscar destino" />
+    </div>
+    <div class="col-12 col-md-3">
+        <select name="categoria" class="form-select" aria-label="Categoría">
+            <option value="">Todas las categorías</option>
+            @foreach (var categoria in Model.Categorias)
+            {
+                <option value="@categoria" selected="@(categoria == Model.Categoria)">@categoria</option>
+            }
+        </select>
+    </div>
+    <div class="col-12 col-md-auto">
+        <button type="submit" class="btn btn-primary">Buscar</button>
+        @if (Model.HayFiltros)
+        {
+            <a asp-controller="Home" asp-action="Index" class="btn btn-outline-secondary">Limpiar</a>
+        }
+    </div>
+</form>
+
+@if (Model.Error is not null)
 {
-    <div class="alert alert-danger" role="alert">@errorCarga</div>
+    <div class="alert alert-danger" role="alert">@Model.Error</div>
 }
 
-@if (Model.Count == 0 && ViewBag.Error is null)
+@if (Model.Destinos.Count == 0 && Model.Error is null)
 {
-    <p class="text-center text-muted">Todavía no hay destinos publicados.</p>
+    <p class="text-center text-muted">
+        @(Model.HayFiltros
+            ? "No encontramos destinos con esa búsqueda. Prueba con otra palabra o quita el filtro."
+            : "Todavía no hay destinos publicados.")
+    </p>
 }
 else
 {
     <div class="collage">
-        @foreach (var destino in Model)
+        @foreach (var destino in Model.Destinos)
         {
-            <a class="collage-item" asp-controller="Destinos" asp-action="Detalle" asp-route-id="@destino.DestinoID"
-               title="@destino.Nombre, @destino.Pais">
-                <img src="@destino.ImagenUrl" alt="@destino.Nombre" loading="lazy" referrerpolicy="no-referrer" />
-                <span class="collage-nombre">
-                    @destino.Nombre
-                    <span class="collage-pais">@destino.Pais</span>
-                </span>
-            </a>
+            <partial name="_TarjetaDestino" model="@(new WellRoute.Web.Models.TarjetaDestinoViewModel
+            {
+                Destino = destino,
+                MostrarFavorito = Model.PuedeFavoritos,
+                EsFavorito = Model.FavoritosIds.Contains(destino.DestinoID),
+                ReturnUrl = retorno
+            })" />
         }
     </div>
 }

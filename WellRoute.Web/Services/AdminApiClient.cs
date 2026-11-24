@@ -36,8 +36,20 @@ public sealed class AdminApiClient(HttpClient http)
 
     // ---------- Destinos ----------
     // Los dos primeros son públicos: no llevan token.
-    public Task<RespuestaApi<List<DestinoListaDto>>> ListarDestinosPublicosAsync(CancellationToken ct) =>
-        EnviarAsync<List<DestinoListaDto>>(HttpMethod.Get, "api/destinos", null, null, ct);
+    public Task<RespuestaApi<List<DestinoListaDto>>> ListarDestinosPublicosAsync(
+        string? buscar, string? categoria, CancellationToken ct)
+    {
+        var partes = new List<string>();
+        if (!string.IsNullOrWhiteSpace(buscar))
+            partes.Add($"buscar={Uri.EscapeDataString(buscar.Trim())}");
+        if (!string.IsNullOrWhiteSpace(categoria))
+            partes.Add($"categoria={Uri.EscapeDataString(categoria.Trim())}");
+
+        var ruta = partes.Count == 0 ? "api/destinos" : $"api/destinos?{string.Join("&", partes)}";
+
+        return
+            EnviarAsync<List<DestinoListaDto>>(HttpMethod.Get, ruta, null, null, ct);
+    }
 
     public Task<RespuestaApi<DestinoDetalleDto>> ObtenerDestinoPublicoAsync(int id, CancellationToken ct) =>
         EnviarAsync<DestinoDetalleDto>(HttpMethod.Get, $"api/destinos/{id}", null, null, ct);
@@ -60,6 +72,19 @@ public sealed class AdminApiClient(HttpClient http)
         string token, int id, bool activo, CancellationToken ct) =>
         EnviarAsync<bool>(HttpMethod.Post,
             $"api/destinos/{id}/{(activo ? "activar" : "desactivar")}", token, null, ct);
+
+    // ---------- Favoritos ----------
+    public Task<RespuestaApi<List<DestinoListaDto>>> ListarFavoritosAsync(string token, CancellationToken ct) =>
+        EnviarAsync<List<DestinoListaDto>>(HttpMethod.Get, "api/favoritos", token, null, ct);
+
+    public Task<RespuestaApi<List<int>>> ListarIdsFavoritosAsync(string token, CancellationToken ct) =>
+        EnviarAsync<List<int>>(HttpMethod.Get, "api/favoritos/ids", token, null, ct);
+
+    public Task<RespuestaApi<bool>> AgregarFavoritoAsync(string token, int destinoId, CancellationToken ct) =>
+        EnviarAsync<bool>(HttpMethod.Post, $"api/favoritos/{destinoId}", token, null, ct);
+
+    public Task<RespuestaApi<bool>> QuitarFavoritoAsync(string token, int destinoId, CancellationToken ct) =>
+        EnviarAsync<bool>(HttpMethod.Delete, $"api/favoritos/{destinoId}", token, null, ct);
 
     // ---------- Roles ----------
     public Task<RespuestaApi<List<RolListaDto>>> ListarRolesAsync(string token, CancellationToken ct) =>
