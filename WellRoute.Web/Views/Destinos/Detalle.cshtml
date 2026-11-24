@@ -1,0 +1,25 @@
+@model WellRoute.Models.Dtos.DestinoDetalleDto
+
+@{
+    ViewData["Title"] = Model.Nombre;
+}
+
+<a asp-controller="Home" asp-action="Index" class="btn btn-link px-0 mb-2">&larr; Volver a los destinos</a>
+
+<img class="destino-portada mb-3" src="@Model.ImagenUrl" alt="@Model.Nombre" referrerpolicy="no-referrer" />
+
+<div class="d-flex flex-wrap align-items-center gap-2 mb-2">
+    <h1 class="mb-0">@Model.Nombre</h1>
+    <span class="badge bg-primary">@Model.Categoria</span>
+</div>
+
+<p class="text-muted fs-5">@Model.Pais</p>
+
+<p style="white-space: pre-line;">@Model.Descripcion</p>
+
+@if (!string.IsNullOrWhiteSpace(Model.VideoUrl))
+{
+    <a href="@Model.VideoUrl" target="_blank" rel="noopener noreferrer" class="btn btn-outline-primary">
+        Ver video informativo
+    </a>
+}

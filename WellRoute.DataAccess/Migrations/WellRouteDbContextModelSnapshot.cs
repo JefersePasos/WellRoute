@@ -75,6 +75,66 @@ namespace WellRoute.DataAccess.Migrations
                     b.ToTable("Bitacora", (string)null);
                 });
 
+            modelBuilder.Entity("WellRoute.Models.Entities.Destino", b =>
+                {
+                    b.Property<int>("DestinoID")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("DestinoID"));
+
+                    b.Property<bool>("Activo")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("bit")
+                        .HasDefaultValue(true);
+
+                    b.Property<string>("Categoria")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<string>("Descripcion")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<DateTime?>("FechaActualizacion")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime>("FechaCreacion")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()");
+
+                    b.Property<string>("ImagenUrl")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("Nombre")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
+
+                    b.Property<string>("Pais")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<string>("VideoUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.HasKey("DestinoID");
+
+                    b.HasIndex("Activo");
+
+                    b.HasIndex("Nombre", "Pais")
+                        .IsUnique();
+
+                    b.ToTable("Destinos", (string)null);
+                });
+
             modelBuilder.Entity("WellRoute.Models.Entities.Historial_Acceso", b =>
                 {
                     b.Property<int>("HistorialAccesoID")
