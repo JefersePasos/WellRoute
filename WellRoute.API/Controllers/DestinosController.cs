@@ -19,9 +19,10 @@ namespace WellRoute.API.Controllers
 		// ---------- Público: portada y ficha (solo destinos activos) ----------
 
 		[HttpGet]
-		public async Task<IActionResult> ListarPublicos(CancellationToken ct)
+		public async Task<IActionResult> ListarPublicos(
+			[FromQuery] string? buscar, [FromQuery] string? categoria, CancellationToken ct)
 		{
-			return Ok(await _destinos.ListarPublicosAsync(ct));
+			return Ok(await _destinos.ListarPublicosAsync(buscar, categoria, ct));
 		}
 
 		[HttpGet("{id:int}")]

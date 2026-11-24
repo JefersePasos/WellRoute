@@ -6,6 +6,7 @@ using WellRoute.API;
 using WellRoute.Arquitecture.Auditoria;
 using WellRoute.Arquitecture.Auth;
 using WellRoute.Arquitecture.Destinos;
+using WellRoute.Arquitecture.Favoritos;
 using WellRoute.Arquitecture.Roles;
 using WellRoute.Arquitecture.Security;
 using WellRoute.Arquitecture.Usuarios;
@@ -34,6 +35,7 @@ builder.Services.AddScoped<IRolService, RolService>();
 
 // Destinos (portada y gestión)
 builder.Services.AddScoped<IDestinoService, DestinoService>();
+builder.Services.AddScoped<IFavoritoService, FavoritoService>();
 
 // Historial de accesos y bitácora (issue #7)
 builder.Services.AddHttpContextAccessor();

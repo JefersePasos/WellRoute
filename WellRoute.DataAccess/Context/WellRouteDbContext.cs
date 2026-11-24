@@ -20,6 +20,7 @@ namespace WellRoute.DataAccess.Context
         public DbSet<Historial_Acceso> HistorialAccesos { get; set; }
         public DbSet<Bitacora> Bitacoras { get; set; }
         public DbSet<Destino> Destinos { get; set; }
+        public DbSet<Favorito> Favoritos { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -262,6 +263,30 @@ namespace WellRoute.DataAccess.Context
                     .IsUnique();
 
                 entity.HasIndex(e => e.Activo);
+            });
+
+            // ==================== CONFIGURACIÓN FAVORITO ====================
+            modelBuilder.Entity<Favorito>(entity =>
+            {
+                entity.ToTable("Favoritos");
+
+                entity.HasKey(e => new { e.UsuarioID, e.DestinoID });
+
+                entity.Property(e => e.FechaCreacion)
+                    .HasDefaultValueSql("GETUTCDATE()");
+
+                // Si se borra el usuario o el destino, sus favoritos ya no tienen sentido
+                entity.HasOne(e => e.Usuario)
+                    .WithMany()
+                    .HasForeignKey(e => e.UsuarioID)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasOne(e => e.Destino)
+                    .WithMany()
+                    .HasForeignKey(e => e.DestinoID)
+                    .OnDelete(DeleteBehavior.Cascade);
+
+                entity.HasIndex(e => e.DestinoID);
             });
 
             // ==================== SEED DATA: PERMISOS ====================

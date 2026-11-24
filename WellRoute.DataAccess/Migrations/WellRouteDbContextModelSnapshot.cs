@@ -135,6 +135,26 @@ namespace WellRoute.DataAccess.Migrations
                     b.ToTable("Destinos", (string)null);
                 });
 
+            modelBuilder.Entity("WellRoute.Models.Entities.Favorito", b =>
+                {
+                    b.Property<int>("UsuarioID")
+                        .HasColumnType("int");
+
+                    b.Property<int>("DestinoID")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime>("FechaCreacion")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()");
+
+                    b.HasKey("UsuarioID", "DestinoID");
+
+                    b.HasIndex("DestinoID");
+
+                    b.ToTable("Favoritos", (string)null);
+                });
+
             modelBuilder.Entity("WellRoute.Models.Entities.Historial_Acceso", b =>
                 {
                     b.Property<int>("HistorialAccesoID")
@@ -562,6 +582,25 @@ namespace WellRoute.DataAccess.Migrations
                         .WithMany()
                         .HasForeignKey("UsuarioID")
                         .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("Usuario");
+                });
+
+            modelBuilder.Entity("WellRoute.Models.Entities.Favorito", b =>
+                {
+                    b.HasOne("WellRoute.Models.Entities.Destino", "Destino")
+                        .WithMany()
+                        .HasForeignKey("DestinoID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("WellRoute.Models.Entities.Usuario", "Usuario")
+                        .WithMany()
+                        .HasForeignKey("UsuarioID")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Destino");
 
                     b.Navigation("Usuario");
                 });

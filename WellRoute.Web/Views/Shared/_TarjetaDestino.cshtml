@@ -1,0 +1,26 @@
+@model WellRoute.Web.Models.TarjetaDestinoViewModel
+
+<div class="collage-item">
+    <a class="collage-link" asp-controller="Destinos" asp-action="Detalle" asp-route-id="@Model.Destino.DestinoID"
+       title="@Model.Destino.Nombre, @Model.Destino.Pais">
+        <img src="@Model.Destino.ImagenUrl" alt="@Model.Destino.Nombre" loading="lazy" referrerpolicy="no-referrer" />
+        <span class="collage-nombre">
+            @Model.Destino.Nombre
+            <span class="collage-pais">@Model.Destino.Pais</span>
+        </span>
+    </a>
+
+    @if (Model.MostrarFavorito)
+    {
+        <form asp-controller="Favoritos" asp-action="Alternar" method="post" class="collage-favorito">
+            <input type="hidden" name="destinoId" value="@Model.Destino.DestinoID" />
+            <input type="hidden" name="agregar" value="@((!Model.EsFavorito).ToString().ToLowerInvariant())" />
+            <input type="hidden" name="returnUrl" value="@Model.ReturnUrl" />
+            <button type="submit" class="btn-favorito @(Model.EsFavorito ? "activo" : "")"
+                    aria-label="@(Model.EsFavorito ? "Quitar de favoritos" : "Guardar en favoritos")"
+                    title="@(Model.EsFavorito ? "Quitar de favoritos" : "Guardar en favoritos")">
+                @(Model.EsFavorito ? "♥" : "♡")
+            </button>
+        </form>
+    }
+</div>

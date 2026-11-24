@@ -1,25 +1,41 @@
-@model WellRoute.Models.Dtos.DestinoDetalleDto
+@model WellRoute.Web.Models.DestinoFichaViewModel
 
 @{
-    ViewData["Title"] = Model.Nombre;
+    var destino = Model.Destino;
+    ViewData["Title"] = destino.Nombre;
+    var retorno = $"{Context.Request.Path}{Context.Request.QueryString}";
 }
 
 <a asp-controller="Home" asp-action="Index" class="btn btn-link px-0 mb-2">&larr; Volver a los destinos</a>
 
-<img class="destino-portada mb-3" src="@Model.ImagenUrl" alt="@Model.Nombre" referrerpolicy="no-referrer" />
+<img class="destino-portada mb-3" src="@destino.ImagenUrl" alt="@destino.Nombre" referrerpolicy="no-referrer" />
 
 <div class="d-flex flex-wrap align-items-center gap-2 mb-2">
-    <h1 class="mb-0">@Model.Nombre</h1>
-    <span class="badge bg-primary">@Model.Categoria</span>
+    <h1 class="mb-0">@destino.Nombre</h1>
+    <span class="badge bg-primary">@destino.Categoria</span>
 </div>
 
-<p class="text-muted fs-5">@Model.Pais</p>
+<p class="text-muted fs-5">@destino.Pais</p>
 
-<p style="white-space: pre-line;">@Model.Descripcion</p>
+<p style="white-space: pre-line;">@destino.Descripcion</p>
 
-@if (!string.IsNullOrWhiteSpace(Model.VideoUrl))
-{
-    <a href="@Model.VideoUrl" target="_blank" rel="noopener noreferrer" class="btn btn-outline-primary">
-        Ver video informativo
-    </a>
-}
+<div class="d-flex flex-wrap gap-2">
+    @if (!string.IsNullOrWhiteSpace(destino.VideoUrl))
+    {
+        <a href="@destino.VideoUrl" target="_blank" rel="noopener noreferrer" class="btn btn-outline-primary">
+            Ver video informativo
+        </a>
+    }
+
+    @if (Model.PuedeFavoritos)
+    {
+        <form asp-controller="Favoritos" asp-action="Alternar" method="post">
+            <input type="hidden" name="destinoId" value="@destino.DestinoID" />
+            <input type="hidden" name="agregar" value="@((!Model.EsFavorito).ToString().ToLowerInvariant())" />
+            <input type="hidden" name="returnUrl" value="@retorno" />
+            <button type="submit" class="btn @(Model.EsFavorito ? "btn-danger" : "btn-outline-danger")">
+                @(Model.EsFavorito ? "♥ En tus favoritos (quitar)" : "♡ Guardar en favoritos")
+            </button>
+        </form>
+    }
+</div>

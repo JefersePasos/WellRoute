@@ -46,6 +46,9 @@
                     @if (User.Identity?.IsAuthenticated == true)
                     {
                         <div class="d-flex flex-wrap align-items-center gap-2">
+                            <a asp-controller="Favoritos" asp-action="Index" class="btn btn-outline-danger">
+                                Mis favoritos
+                            </a>
                             <a asp-controller="Cuenta" asp-action="Perfil" class="btn btn-outline-primary">
                                 Mi cuenta
                             </a>
