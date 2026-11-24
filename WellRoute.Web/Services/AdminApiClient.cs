@@ -34,6 +34,33 @@ public sealed class AdminApiClient(HttpClient http)
         EnviarAsync<ContrasenaTemporalDto>(HttpMethod.Post,
             $"api/usuarios/{id}/restablecer-contrasena", token, null, ct);
 
+    // ---------- Destinos ----------
+    // Los dos primeros son públicos: no llevan token.
+    public Task<RespuestaApi<List<DestinoListaDto>>> ListarDestinosPublicosAsync(CancellationToken ct) =>
+        EnviarAsync<List<DestinoListaDto>>(HttpMethod.Get, "api/destinos", null, null, ct);
+
+    public Task<RespuestaApi<DestinoDetalleDto>> ObtenerDestinoPublicoAsync(int id, CancellationToken ct) =>
+        EnviarAsync<DestinoDetalleDto>(HttpMethod.Get, $"api/destinos/{id}", null, null, ct);
+
+    public Task<RespuestaApi<List<DestinoListaDto>>> ListarDestinosGestionAsync(string token, CancellationToken ct) =>
+        EnviarAsync<List<DestinoListaDto>>(HttpMethod.Get, "api/destinos/gestion", token, null, ct);
+
+    public Task<RespuestaApi<DestinoDetalleDto>> ObtenerDestinoGestionAsync(string token, int id, CancellationToken ct) =>
+        EnviarAsync<DestinoDetalleDto>(HttpMethod.Get, $"api/destinos/gestion/{id}", token, null, ct);
+
+    public Task<RespuestaApi<DestinoDetalleDto>> CrearDestinoAsync(
+        string token, GuardarDestinoRequest solicitud, CancellationToken ct) =>
+        EnviarAsync<DestinoDetalleDto>(HttpMethod.Post, "api/destinos", token, solicitud, ct);
+
+    public Task<RespuestaApi<DestinoDetalleDto>> ActualizarDestinoAsync(
+        string token, int id, GuardarDestinoRequest solicitud, CancellationToken ct) =>
+        EnviarAsync<DestinoDetalleDto>(HttpMethod.Put, $"api/destinos/{id}", token, solicitud, ct);
+
+    public Task<RespuestaApi<bool>> CambiarEstadoDestinoAsync(
+        string token, int id, bool activo, CancellationToken ct) =>
+        EnviarAsync<bool>(HttpMethod.Post,
+            $"api/destinos/{id}/{(activo ? "activar" : "desactivar")}", token, null, ct);
+
     // ---------- Roles ----------
     public Task<RespuestaApi<List<RolListaDto>>> ListarRolesAsync(string token, CancellationToken ct) =>
         EnviarAsync<List<RolListaDto>>(HttpMethod.Get, "api/roles", token, null, ct);
@@ -58,14 +85,15 @@ public sealed class AdminApiClient(HttpClient http)
             $"api/roles/{id}/{(activo ? "activar" : "desactivar")}", token, null, ct);
 
     private async Task<RespuestaApi<T>> EnviarAsync<T>(
-        HttpMethod metodo, string ruta, string token, object? cuerpo, CancellationToken ct)
+        HttpMethod metodo, string ruta, string? token, object? cuerpo, CancellationToken ct)
     {
         try
         {
             using var solicitud = new HttpRequestMessage(metodo, ruta);
 
             // El token pertenece a esta petición. No lo ponemos en DefaultRequestHeaders.
-            solicitud.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            if (!string.IsNullOrEmpty(token))
+                solicitud.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
 
             if (cuerpo is not null)
                 solicitud.Content = JsonContent.Create(cuerpo, cuerpo.GetType());

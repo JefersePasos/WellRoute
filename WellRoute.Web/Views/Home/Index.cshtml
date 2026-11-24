@@ -1,8 +1,36 @@
-﻿@{
-    ViewData["Title"] = "Home Page";
+﻿@model List<WellRoute.Models.Dtos.DestinoListaDto>
+
+@{
+    ViewData["Title"] = "Destinos";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+<div class="text-center my-4">
+    <h1 class="display-5">¿A dónde quieres ir?</h1>
+    <p class="text-muted">Elige un destino y descubre todo lo que puedes hacer allí.</p>
 </div>
+
+@if (ViewBag.Error is string errorCarga)
+{
+    <div class="alert alert-danger" role="alert">@errorCarga</div>
+}
+
+@if (Model.Count == 0 && ViewBag.Error is null)
+{
+    <p class="text-center text-muted">Todavía no hay destinos publicados.</p>
+}
+else
+{
+    <div class="collage">
+        @foreach (var destino in Model)
+        {
+            <a class="collage-item" asp-controller="Destinos" asp-action="Detalle" asp-route-id="@destino.DestinoID"
+               title="@destino.Nombre, @destino.Pais">
+                <img src="@destino.ImagenUrl" alt="@destino.Nombre" loading="lazy" referrerpolicy="no-referrer" />
+                <span class="collage-nombre">
+                    @destino.Nombre
+                    <span class="collage-pais">@destino.Pais</span>
+                </span>
+            </a>
+        }
+    </div>
+}

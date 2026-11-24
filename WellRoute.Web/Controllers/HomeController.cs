@@ -1,14 +1,25 @@
 using Microsoft.AspNetCore.Mvc;
 using System.Diagnostics;
+using WellRoute.Models.Dtos;
 using WellRoute.Web.Models;
+using WellRoute.Web.Services;
 
 namespace WellRoute.Web.Controllers
 {
-    public class HomeController : Controller
+    public class HomeController(AdminApiClient api) : Controller
     {
-        public IActionResult Index()
+        // Portada: collage con los destinos activos. Es pública.
+        public async Task<IActionResult> Index(CancellationToken ct)
         {
-            return View();
+            var respuesta = await api.ListarDestinosPublicosAsync(ct);
+
+            if (!respuesta.Exitosa || respuesta.Datos is null)
+            {
+                ViewBag.Error = "No se pudieron cargar los destinos. Intenta de nuevo en unos minutos.";
+                return View(new List<DestinoListaDto>());
+            }
+
+            return View(respuesta.Datos);
         }
 
         public IActionResult Privacy()

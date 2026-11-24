@@ -19,6 +19,7 @@ namespace WellRoute.DataAccess.Context
         public DbSet<Rol_Permiso> RolPermisos { get; set; }
         public DbSet<Historial_Acceso> HistorialAccesos { get; set; }
         public DbSet<Bitacora> Bitacoras { get; set; }
+        public DbSet<Destino> Destinos { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -218,6 +219,49 @@ namespace WellRoute.DataAccess.Context
                 entity.HasIndex(e => e.UsuarioID);
                 entity.HasIndex(e => e.Fecha);
                 entity.HasIndex(e => new { e.Modulo, e.Accion });
+            });
+
+            // ==================== CONFIGURACIÓN DESTINO ====================
+            modelBuilder.Entity<Destino>(entity =>
+            {
+                entity.ToTable("Destinos");
+
+                entity.HasKey(e => e.DestinoID);
+
+                entity.Property(e => e.Nombre)
+                    .IsRequired()
+                    .HasMaxLength(150);
+
+                entity.Property(e => e.Pais)
+                    .IsRequired()
+                    .HasMaxLength(100);
+
+                entity.Property(e => e.Categoria)
+                    .IsRequired()
+                    .HasMaxLength(50);
+
+                entity.Property(e => e.Descripcion)
+                    .IsRequired()
+                    .HasMaxLength(2000);
+
+                entity.Property(e => e.ImagenUrl)
+                    .IsRequired()
+                    .HasMaxLength(500);
+
+                entity.Property(e => e.VideoUrl)
+                    .HasMaxLength(500);
+
+                entity.Property(e => e.Activo)
+                    .HasDefaultValue(true);
+
+                entity.Property(e => e.FechaCreacion)
+                    .HasDefaultValueSql("GETUTCDATE()");
+
+                // No puede haber dos destinos con el mismo nombre en el mismo país
+                entity.HasIndex(e => new { e.Nombre, e.Pais })
+                    .IsUnique();
+
+                entity.HasIndex(e => e.Activo);
             });
 
             // ==================== SEED DATA: PERMISOS ====================
