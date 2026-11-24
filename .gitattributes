@@ -1,0 +1,10 @@
+# Normaliza los saltos de línea para que Git no marque archivos como modificados
+# solo por diferencias entre Windows (CRLF) y otros sistemas (LF).
+* text=auto
+
+*.cs text diff=csharp
+*.cshtml text
+*.csproj text
+*.slnx text
+*.json text
+*.md text
